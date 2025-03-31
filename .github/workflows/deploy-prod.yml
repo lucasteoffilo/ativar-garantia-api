@@ -1,0 +1,55 @@
+name: Deploy API NestJS
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checando repositório
+      uses: actions/checkout@v2
+
+    - name: Configurando SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_SERVER_AWS }}
+
+    - name: Adicionando servidor ao known_hosts
+      run: |
+        ssh-keyscan -H ec2-3-85-166-28.compute-1.amazonaws.com >> ~/.ssh/known_hosts
+        
+    - name: Testar Conexão SSH
+      run: ssh -o StrictHostKeyChecking=no ec2-user@ec2-3-85-166-28.compute-1.amazonaws.com echo "Conexão SSH bem-sucedida"
+
+    - name: Construindo e enviando Docker image para o servidor
+      run: |
+        docker build -t api-sistema-r2-prod -f Dockerfile.prod .
+        docker save api-sistema-r2-prod | bzip2 | ssh ec2-user@ec2-3-85-166-28.compute-1.amazonaws.com 'bunzip2 | docker load'
+    
+    - name: Subindo container Docker
+      run: |
+        ssh ec2-user@ec2-3-85-166-28.compute-1.amazonaws.com << 'EOF'
+          # Listando todos os containers para depuração
+          docker ps -a
+
+          # Parando e removendo o container, se existir
+          docker stop api-sistema-r2-prod || true
+          docker rm api-sistema-r2-prod || true
+
+          # Verificando se o arquivo .env existe
+          if [ -f /srv/r2-api-production/.env ]; then
+            echo ".env file exists."
+          else
+            echo ".env file does not exist."
+            exit 1
+          fi
+
+          # Executando o novo container
+          docker run -d --name api-sistema-r2-prod -p 3001:3001 --env-file /srv/r2-api-production/.env api-sistema-r2-prod
+          docker system prune -f
+        EOF

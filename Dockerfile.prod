@@ -1,0 +1,40 @@
+# Etapa 1: Build
+FROM node:16.14-alpine as build
+
+WORKDIR /app
+
+# Copia os arquivos package.json e package-lock.json
+COPY package*.json ./
+
+# Instala as dependências
+RUN npm install --legacy-peer-deps
+
+# Copia o restante dos arquivos do projeto
+COPY . .
+
+# Compila o projeto
+RUN npm run build
+
+# Etapa 2: Final
+FROM node:16.14-alpine as prod
+
+WORKDIR /app
+
+# Instala pm2 globalmente
+RUN npm install -g pm2
+
+# Copia apenas os arquivos compilados e as dependências de produção
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/dist ./dist
+
+# Instala apenas as dependências de produção
+RUN npm install --only=production
+
+# Copia o arquivo de ambiente (se necessário)
+COPY .env.stage.dev .env
+
+# Expõe a porta da API
+EXPOSE 3001
+
+# Comando para iniciar a aplicação com PM2
+CMD ["pm2-runtime", "dist/main.js", "--name", "nestjs-api-prod"]
