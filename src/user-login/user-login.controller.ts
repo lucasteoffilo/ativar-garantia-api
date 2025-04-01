@@ -6,7 +6,7 @@ import { UpdateUserLoginDto } from './dto/update-user-login.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 
 @UseGuards(AuthGuard)
-@Controller('user-login')
+@Controller('usuario-login')
 export class UserLoginController {
   constructor(private readonly userLoginService: UserLoginService) { }
 
