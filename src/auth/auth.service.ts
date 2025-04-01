@@ -25,25 +25,28 @@ export class AuthService {
       [username, password]
     );
 
-    console.log(login);
-    
     // Se o usuário retornado for nulo, significa que a autenticação falhou
-    if (login[0].id_user_father == null) {
+    if (login.id_usuario == null) {
       throw new ForbiddenException('Acesso negado');
     }
 
-    
-    
+    const [user] = await this.connection.query(
+      `SELECT * FROM tb_usuario 
+       WHERE id_usuario = ?`,
+      [login.id_usuario]
+    );
+
     const payload = {
-      id_user: login[0].id_user,
-      name: login[0].name,
-      username: login[0].username,
-      id_user_type: login[0].id_user_type,
-      id_user_father: login[0].id_user_father,
-      id_user_login: login[0].id_user_login,
-      id_profile: login[0].id_profile,
+      id_usuario_login: login.id_usuario_login,
+      id_usuario: login.id_usuario,
+      username: login.username,
+      ulid_usuario: user.ulid_usuario,
+      id_tipo_usuario: user.id_tipo_usuario,
+      nome: user.nome,
+      cpf_cnpj: user.cpf_cnpj,
+      flg_status: user.flg_status
     };
-    
+
     const id_token = await this.jwtService.sign(payload);
 
     const access_token = await this.jwtService.sign({
@@ -52,9 +55,13 @@ export class AuthService {
       data: payload,
       scope: 'full_access',
       jti: this.genJti(),
-  });
-    // return { id_token, access_token, data };
-    return { id_token, access_token,  };
+    });
+
+    return {
+      id_token, 
+      access_token, 
+      ...payload
+    };
   }
 
   genJti() {

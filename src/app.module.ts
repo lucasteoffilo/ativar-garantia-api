@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserLoginModule } from './user-login/user-login.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { MailModule } from './mail/mail.module';
+import { FormularioGarantiaModule } from './formulario-garantia/formulario-garantia.module';
 import * as bodyParser from 'body-parser';
 
 @Module({
@@ -39,7 +40,8 @@ import * as bodyParser from 'body-parser';
     UserModule,
     AuthModule,
     UserLoginModule,
-    MailModule
+    MailModule,
+    FormularioGarantiaModule
   ],
   controllers: [AppController],
   providers: [AppService],
