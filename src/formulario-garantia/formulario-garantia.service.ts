@@ -18,6 +18,10 @@ export class FormularioGarantiaService {
       [data.usuario]
     );
 
+    console.log(user);
+    
+    console.log(data);
+
     const query = `
         INSERT INTO tb_formulario_garantia (
             id_usuario, local_compra, numero_nota_fiscal, data_nota_fiscal, preco_unitario, emitente, 
@@ -56,16 +60,28 @@ export class FormularioGarantiaService {
 
   }
 
-  async findByUserId(userId: number) {
+  async findByUserId(userId: number, user) {
     try {
-      const query = `
-        SELECT * FROM tb_formulario_garantia
-        WHERE id_usuario = ?
-        ORDER BY data_registro DESC
-      `;
       
-      const results = await this.connection.query(query, [userId]);
-      return results;
+      if (user.id_tipo_usuario == "1") {
+        const query = `
+          SELECT * FROM tb_formulario_garantia
+          ORDER BY data_registro DESC
+        `;
+        
+        const results = await this.connection.query(query, [userId]);
+        return results;        
+      } else {
+        const query = `
+          SELECT * FROM tb_formulario_garantia
+          WHERE id_usuario = ?
+          ORDER BY data_registro DESC
+        `;
+        
+        const results = await this.connection.query(query, [userId]);
+        
+        return results;
+      }
     } catch (error) {
       console.error("Erro ao buscar formulários:", error);
       throw new Error("Erro ao buscar formulários de garantia");

@@ -21,7 +21,7 @@ async function bootstrap() {
       'capacitor://localhost',
       'ionic://localhost',
       'http://localhost',
-      'http://localhost:3000',
+      'http://localhost:3001',
       'http://localhost:3100',
       'http://localhost:4200',
       'http://r2-sistema.softbite.com.br',

@@ -3,7 +3,6 @@ import { FormularioGarantiaService } from './formulario-garantia.service';
 import { Response } from 'express';
 import { AuthGuard } from 'src/auth/auth.guard';
 
-
 @Controller('formulario-garantia')
 export class FormularioGarantiaController {
   constructor(private readonly formularioGarantiaService: FormularioGarantiaService) {}
@@ -31,7 +30,7 @@ export class FormularioGarantiaController {
   async findByUserId(@Req() req, @Res() res: Response) {
     try {
       const userId = req.user.data.id_usuario; 
-      const result = await this.formularioGarantiaService.findByUserId(userId);
+      const result = await this.formularioGarantiaService.findByUserId(userId, req.user.data);
       res.status(HttpStatus.OK).send({
         statusCode: HttpStatus.OK,
         message: ["success"],

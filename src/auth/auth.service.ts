@@ -16,17 +16,16 @@ export class AuthService {
 
   async signIn(username, password) {
     const [login] = await this.connection.query(
-      `SELECT id_usuario_login, 
-              id_usuario, 
+      `SELECT id_usuario, 
               email as username, 
-              password 
-       FROM tb_usuario_login 
-       WHERE email = ? AND password = ? AND flg_status = 1`,
+              senha 
+       FROM tb_usuario
+       WHERE email = ? AND senha = ? AND flg_status = 1`,
       [username, password]
     );
 
     // Se o usuário retornado for nulo, significa que a autenticação falhou
-    if (login.id_usuario == null) {
+    if (login?.id_usuario == null) {
       throw new ForbiddenException('Acesso negado');
     }
 
@@ -37,7 +36,6 @@ export class AuthService {
     );
 
     const payload = {
-      id_usuario_login: login.id_usuario_login,
       id_usuario: login.id_usuario,
       username: login.username,
       ulid_usuario: user.ulid_usuario,
