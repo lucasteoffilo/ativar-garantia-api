@@ -18,10 +18,6 @@ export class FormularioGarantiaService {
       [data.usuario]
     );
 
-    console.log(user);
-    
-    console.log(data);
-
     const query = `
         INSERT INTO tb_formulario_garantia (
             id_usuario, local_compra, numero_nota_fiscal, data_nota_fiscal, preco_unitario, emitente, 
