@@ -17,15 +17,15 @@ async function bootstrap() {
     // preflightContinue: true,
     credentials: true,
     origin: [
-      'http://localhost',
-      'capacitor://localhost',
-      'ionic://localhost',
-      'http://localhost',
-      'http://localhost:3001',
-      'http://localhost:3100',
-      'http://localhost:4200',
-      'http://r2-sistema.softbite.com.br',
-      'https://r2-sistema.softbite.com.br'
+      // 'http://localhost',
+      // 'capacitor://localhost',
+      // 'ionic://localhost',
+      // 'http://localhost',
+      // 'http://localhost:3001',
+      // 'http://localhost:3100',
+      // 'http://localhost:4200',
+      'https://ativar-garantia-services-ativar-garantia-admin.dxwvrh.easypanel.host',
+      'https://gestao.ativargarantia.com.br'
     ],
   });
   
