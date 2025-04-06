@@ -44,4 +44,27 @@ export class FormularioGarantiaController {
       });
     }
   }
+
+  @Post('metric')
+  async updateMetric(
+    @Body() body: any,
+    @Res() res: Response
+  ) {
+    try {
+      const result = await this.formularioGarantiaService.updateMetric(
+        body
+      );
+      res.status(HttpStatus.OK).send({
+        statusCode: HttpStatus.OK,
+        message: ["success"],
+        data: result,
+      });
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: [error.message],
+        error: "Ocorreu um erro interno ao atualizar a métrica",
+      });
+    }
+  }
 }
