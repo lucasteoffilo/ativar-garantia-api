@@ -12,6 +12,7 @@ import { MailModule } from './mail/mail.module';
 import { FormularioGarantiaModule } from './formulario-garantia/formulario-garantia.module';
 import { EstatisticaModule } from './estatistica/estatistica.module';
 import * as bodyParser from 'body-parser';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
@@ -37,6 +38,24 @@ import * as bodyParser from 'body-parser';
           database: configService.get('DB_DATABASE'),
           timezone: 'America/Sao_Paulo',
       })
+    }),
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        transport: {
+          host: configService.get('MAIL_HOST'),
+          port: configService.get('MAIL_PORT'),
+          secure: true,
+          auth: {
+            user: configService.get('MAIL_USER'),
+            pass: configService.get('MAIL_PASSWORD'),
+          },
+        },
+        defaults: {
+          from: configService.get('MAIL_FROM'),
+        },
+      }),
+      inject: [ConfigService],
     }),
     UserModule,
     AuthModule,

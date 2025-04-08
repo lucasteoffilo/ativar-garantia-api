@@ -3,12 +3,14 @@ import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { Connection } from 'typeorm';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UserService,
-    private jwtService: JwtService,
+    private jwtService: JwtService,    
+    private mailerService: MailerService,    
     private connection: Connection,
   ) { }
 
@@ -16,28 +18,63 @@ export class AuthService {
 
   async signIn(username, password) {
     const [login] = await this.connection.query(
-      `SELECT id_usuario, 
-              email as username, 
-              senha 
+      `SELECT id_usuario,
+              email as username,
+              senha
        FROM tb_usuario
        WHERE email = ? AND senha = ? AND flg_status = 1`,
       [username, password]
     );
 
-    // Se o usuário retornado for nulo, significa que a autenticação falhou
     if (login?.id_usuario == null) {
       throw new ForbiddenException('Acesso negado');
     }
 
+    // Generate 4 digit verification code
+    const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Store verification code with expiration
+    await this.connection.query(
+      `INSERT INTO tb_usuario_verificacao (id_usuario, codigo, data_criacao, data_expiracao)
+       VALUES (?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 5 MINUTE))`,
+      [login.id_usuario, verificationCode]
+    );
+
+    // Send verification code via email
+    await this.mailerService.sendMail({
+      to: username,
+      subject: 'Código de Verificação Ativar Garantia',
+      text: `Seu código de verificação é: ${verificationCode}. Este código expira em 5 minutos.`
+    });
+
+    return {
+      message: 'Código de verificação enviado para seu email'
+    };
+  }
+
+  async verifyCodeAndGenerateToken(code: any) {
+    const [verification] = await this.connection.query(
+      `SELECT * FROM tb_usuario_verificacao
+       WHERE codigo = ?
+       AND data_expiracao > NOW()
+       ORDER BY data_criacao DESC
+       LIMIT 1`,
+      [code]
+    );
+
+    if (!verification) {
+      throw new UnauthorizedException('Código inválido ou expirado');
+    }
+
     const [user] = await this.connection.query(
-      `SELECT * FROM tb_usuario 
+      `SELECT * FROM tb_usuario
        WHERE id_usuario = ?`,
-      [login.id_usuario]
+      [verification.id_usuario]
     );
 
     const payload = {
-      id_usuario: login.id_usuario,
-      username: login.username,
+      id_usuario: verification.id_usuario,
+      username: user.email,
       ulid_usuario: user.ulid_usuario,
       id_tipo_usuario: user.id_tipo_usuario,
       nome: user.nome,
@@ -55,9 +92,16 @@ export class AuthService {
       jti: this.genJti(),
     });
 
+    // Delete used verification code
+    await this.connection.query(
+      `DELETE FROM tb_usuario_verificacao
+       WHERE codigo = ?`,
+      [code]
+    );
+
     return {
-      id_token, 
-      access_token, 
+      id_token,
+      access_token,
       ...payload
     };
   }
